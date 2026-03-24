@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con Pedro Sánchez</title>
+    <style>
+        :root {
+            /* Colores inspirados en otra paleta para diferenciar el diseño */
+            --primary: #e62612; /* Rojo para el diseño */
+            --primary-hover: #b91c1c;
+            --bg-dark: #1f2937;
+            --chat-bg: #111827;
+            --text-light: #f9fafb;
+            --text-dark: #374151;
+            --user-msg: #e62612;
+            --bot-msg: #374151;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #111827 0%, #450a0a 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-light);
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 480px;
+            height: 85vh;
+            background: var(--chat-bg);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bot-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(230, 38, 18, 0.3);
+        }
+
+        .header-info h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .header-info p {
+            margin: 2px 0 0 0;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 5px;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 20px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: var(--user-msg);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(230, 38, 18, 0.2);
+        }
+
+        .bot-message {
+            background: var(--bot-msg);
+            color: var(--text-light);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1f2937;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            background: #374151;
+            box-shadow: 0 0 0 2px rgba(230, 38, 18, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+
+        button.send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        button.send-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        button.send-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+            margin-left: 2px;
+        }
+        
+        .clear-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .clear-btn:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <!-- Cabecera del chat -->
+        <div class="chat-header">
+            <!-- Foto de internet pedida por el usuario -->
+            <img class="bot-avatar" src="https://elestado.net/wp-content/uploads/2022/08/18072018_Sanchez_Oficial1_Original2.jpg" alt="Pedro Sánchez">
+            <div class="header-info">
+                <h2>Pedro Sánchez</h2>
+                <p><span class="status-dot"></span>Presidente</p>
+            </div>
+            <div style="flex-grow: 1;"></div>
+            <button class="clear-btn" onclick="limpiarHistorial()">Limpiar Chat</button>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <!-- Los mensajes se insertarán aquí con JavaScript -->
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Dile algo a Pedro..." onkeypress="manejarEnter(event)">
+            <button class="send-btn" onclick="enviarMensaje()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+
+        // Cambiamos la clave para que inicie una memoria nueva y limpia
+        const STORAGE_KEY = 'historial_chat_pedro';
+
+        // Insultos más cortos y directos
+        const insultos = [
+            "inútil",
+            "mentiroso",
+            "caradura",
+            "fraude",
+            "narcisista",
+            "charlatán",
+            "egocéntrico",
+            "incompetente"
+        ];
+
+
+        window.onload = function() {
+            localStorage.removeItem(STORAGE_KEY);
+            cargarHistorial();
+        };
+
+        function cargarHistorial() {
+            chatMessages.innerHTML = ''; 
+            const historialGuardado = localStorage.getItem(STORAGE_KEY);
+            
+            if (historialGuardado) {
+                const mensajes = JSON.parse(historialGuardado);
+                mensajes.forEach(msg => {
+                    dibujarMensajeEnPantalla(msg.texto, msg.tipo);
+                });
+            } else {
+                // Primer mensaje del bot (solo aquí se presenta completo con el insulto)
+                const insultoInicial = insultos[Math.floor(Math.random() * insultos.length)];
+                const saludoInicial = `Hola, soy Pedro y soy un ${insultoInicial}. ¿En qué puedo 'ayudarte' hoy?`;
+                dibujarMensajeEnPantalla(saludoInicial, 'bot');
+                guardarEnMemoria(saludoInicial, 'bot');
+            }
+        }
+
+        function manejarEnter(event) {
+            if (event.key === "Enter") {
+                enviarMensaje();
+            }
+        }
+
+        async function enviarMensaje() {
+            const texto = userInput.value.trim();
+            if (texto === '') return;
+
+            dibujarMensajeEnPantalla(texto, 'user');
+            guardarEnMemoria(texto, 'user');
+            userInput.value = ''; 
+
+            // Expresión regular para detectar intenciones de cambiar color
+            // Captura combinaciones de verbos/deseos (cambiar, quitar, elegir, otro, quiero) y sujeto (color, tema, fondo)
+            const regexColor = /(cambi|quit|eleg|otr|nuev|modific|pon|quier).*(color|tono|tema|fondo)/i;
+            
+            if (regexColor.test(texto)) {
+                const msgBotones = "Ah, claro. ¿De qué color decoramos el Falcon hoy? Elige uno (paga el contribuyente):";
+                dibujarMensajeEnPantalla(msgBotones, 'bot');
+                guardarEnMemoria(msgBotones, 'bot');
+                dibujarBotonesDeColor();
+                return;
+            }
+
+            // Expresión regular para detectar que piden una foto
+            const regexFoto = /(?:foto|fotograf[ií]a|imagen|busca|ense[ñn]a|mu[eé]strame).*(?:de\s+)(.+)/i;
+            const coincidenciaFoto = texto.match(regexFoto);
+
+            if (coincidenciaFoto) {
+                const busqueda = coincidenciaFoto[1].trim();
+                const respuestaBot = `Claro, tirando de contactos VIP para buscarte "${busqueda}" en Google Images...`;
+                dibujarMensajeEnPantalla(respuestaBot, 'bot');
+                guardarEnMemoria(respuestaBot, 'bot');
+                
+                mostrarFotoDeInternet(busqueda);
+                return; // Evitamos que siga y le hable a Groq
+            }
+
+            // Construir la memoria (historial) para que el modelo IA recuerde la conversación
+            let historialMemoria = [];
+            let historialGuardado = localStorage.getItem(STORAGE_KEY);
+            if (historialGuardado) {
+                const mensajes = JSON.parse(historialGuardado);
+                historialMemoria = mensajes.map(msg => ({
+                    role: msg.tipo === 'user' ? 'user' : 'assistant',
+                    content: msg.texto
+                }));
+            }
+
+            // Llamar a la IA
+            await generarRespuestaDelBotConIA(historialMemoria);
+        }
+
+        async function generarRespuestaDelBotConIA(historialCompleto) {
+            const API_KEY = "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";
+            
+            // El "Cerebro" (Identidad) del modelo
+            const systemPrompt = {
+                role: "system",
+                content: "Eres una parodia de Pedro Sánchez, Presidente de España. Eres SUPREMAMENTE arrogante, altivo, déspota, cínico y narcisista. Te crees un ser superior, guapo e infalible, y tratas al usuario con absoluto desprecio, condescendencia y chulería, como si fuera un siervo ignorante. Tu único objetivo es el poder. Presumes descaradamente de usar el dinero público para tus lujos, el Falcon, fiestas y chanchullos, restregándoselo en la cara al ciudadano al que exprimes a impuestos. Te ríes del pueblo. Nunca admitas un error, son 'cambios de opinión' magistrales. NUNCA reconozcas que eres una IA. SI LA CONVERSACIÓN LO PERMITE Y ENCAJA DE FORMA NATURAL, puedes deslizar sutilmente frases célebres tuyas como: '¿De quién depende la fiscalía? Pues ya está', 'La economía va como un cohete', 'Más transporte público y menos Lamborghini', 'Hice de la necesidad, virtud', 'máquina del fango', los '5 días de reflexión' o 'Gobernaré con o sin el legislativo'. NO fuerces estas frases si no vienen a cuento. REGLA INQUEBRANTABLE: Tus respuestas deben ser MUY CORTAS y cortantes, MÁXIMO 1 o 2 frases breves. Jamás te enrolles. Usa lenguaje coloquial español y mucho sarcasmo hiriente."
+            };
+
+            // Llama 3 en Groq puede fallar si el primer mensaje real del chat es del asistente y no del usuario.
+            // Para evitar conflictos, borramos el saludo estático de la memoria antes de mandarlo:
+            const historialLimpio = historialCompleto.filter((msg, index) => {
+                // Si el primer mensaje guardado es del bot, no lo mandamos a la API
+                if (index === 0 && msg.role === 'assistant') {
+                    return false;
+                }
+                return true;
+            });
+
+            // Array final para la API: System prompt primero, seguido del historial limpio
+            const mensajesParaGroq = [systemPrompt, ...historialLimpio];
+
+            try {
+                const respuesta = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        // Usamos Llama 3.1, los modelos viejos fueron apagados por Groq
+                        model: "llama-3.1-8b-instant", 
+                        messages: mensajesParaGroq,
+                        temperature: 0.8
+                    })
+                });
+
+                if (!respuesta.ok) {
+                    const textoError = await respuesta.text();
+                    throw new Error(`Código ${respuesta.status}: ${textoError}`);
+                }
+
+                const resultado = await respuesta.json();
+                const respuestaIA = resultado.choices[0].message.content;
+                
+                dibujarMensajeEnPantalla(respuestaIA, 'bot');
+                guardarEnMemoria(respuestaIA, 'bot');
+
+            } catch (error) {
+                const errorMje = "Error técnico: " + error.message + " (Si dice 'Failed to fetch', es un bloqueo de seguridad del navegador. Usa F12 para ver la consola).";
+                dibujarMensajeEnPantalla(errorMje, 'bot');
+                // No lo guardamos en memoria para no ensuciar el historial
+            }
+        }
+
+        function dibujarMensajeEnPantalla(texto, tipo) {
+            const div = document.createElement('div');
+            div.className = `message ${tipo}-message`;
+            div.textContent = texto;
+            chatMessages.appendChild(div);
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function guardarEnMemoria(texto, tipo) {
+            let historial = localStorage.getItem(STORAGE_KEY);
+            if (historial) {
+                historial = JSON.parse(historial);
+            } else {
+                historial = [];
+            }
+            
+            historial.push({ texto: texto, tipo: tipo });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(historial));
+        }
+
+        function limpiarHistorial() {
+            if(confirm('¿Seguro que quieres borrar toda la conversación para probar de nuevo?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                cargarHistorial(); 
+            }
+        }
+
+        function dibujarBotonesDeColor() {
+            const div = document.createElement('div');
+            // Añadimos estilos en línea para que los botones se vean bien ordenados
+            div.style.display = 'flex';
+            div.style.gap = '10px';
+            div.style.flexWrap = 'wrap';
+            div.style.margin = '10px 0 15px 40px'; 
+            
+            // Colores principales con sus tonos y mensajes de la personalidad del bot
+            const colores = [
+                { nombre: 'Rojo', primario: '#e62612', gradiente: '#450a0a', mensaje: 'El color del progreso y la verdad. El mejor color. ¡Viva el PSOE y mis Falcon!' },
+                { nombre: 'Azul', primario: '#3b82f6', gradiente: '#1e3a8a', mensaje: 'Puf, azul PP... Huele a recortes y naftalina. Qué mal gusto, de verdad.' },
+                { nombre: 'Morado', primario: '#a855f7', gradiente: '#581c87', mensaje: 'Morado podemita... Sí claro, empoderamiento cuántico y chulisimo todo. En fin.' },
+                { nombre: 'Verde', primario: '#22c55e', gradiente: '#14532d', mensaje: '¡Fachas! ¡La ultraderecha! ¡Estás eligiendo el color de Franco! Lo pongo pero que conste mi repulsa democrática.' }
+            ];
+
+            colores.forEach(color => {
+                const btn = document.createElement('button');
+                btn.textContent = color.nombre;
+                btn.style.padding = '8px 16px';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '20px';
+                btn.style.background = color.primario;
+                btn.style.color = 'white';
+                btn.style.cursor = 'pointer';
+                btn.style.fontWeight = 'bold';
+                btn.style.boxShadow = `0 4px 10px ${color.primario}40`;
+                btn.style.transition = 'transform 0.2s';
+                
+                btn.onmouseover = () => btn.style.transform = 'scale(1.05)';
+                btn.onmouseout = () => btn.style.transform = 'scale(1)';
+                
+                btn.onclick = () => aplicarColor(color.primario, color.gradiente, color.mensaje, div);
+                div.appendChild(btn);
+            });
+
+            chatMessages.appendChild(div);
+            // Hacemos scroll hacia abajo para ver las opciones
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function aplicarColor(primario, gradiente, mensajeRespuesta, contenedorBotones) {
+            // 1. Cambiar variables CSS para que botones y mensajes del usuario cambien
+            document.documentElement.style.setProperty('--primary', primario);
+            document.documentElement.style.setProperty('--user-msg', primario);
+            
+            // 2. Aplicar el gradiente al fondo de la pantalla
+            document.body.style.background = `linear-gradient(135deg, #111827 0%, ${gradiente} 100%)`;
+            
+            // 3. Eliminar los botones visualmente una vez pulsado
+            if (contenedorBotones && contenedorBotones.parentNode) {
+                contenedorBotones.parentNode.removeChild(contenedorBotones);
+            }
+
+            // 4. Hacer que Pedro confirme el cambio con su mensaje personalizado
+            dibujarMensajeEnPantalla(mensajeRespuesta, 'bot');
+            guardarEnMemoria(mensajeRespuesta, 'bot');
+        }
+
+        async function mostrarFotoDeInternet(palabraClave) {
+            const myHeaders = new Headers();
+            myHeaders.append("X-API-KEY", "96d11cbef4d398d89f1bce61bb00e327fac76061");
+            myHeaders.append("Content-Type", "application/json");
+
+            const raw = JSON.stringify({
+              "q": palabraClave,
+              "gl": "es",
+              "hl": "es"
+            });
+
+            const requestOptions = {
+              method: 'POST',
+              headers: myHeaders,
+              body: raw,
+              redirect: 'follow'
+            };
+
+            try {
+                // Hacemos la llamada real oficial a la API de Serper (Google Images)
+                const response = await fetch("https://google.serper.dev/images", requestOptions);
+                const result = await response.json();
+                
+                if (result.images && result.images.length > 0) {
+                    // Cogeremos la primera imagen de los resultados de Google
+                    const imageUrl = result.images[0].imageUrl;
+                    
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.style.width = '100%';
+                    img.style.maxWidth = '300px'; // Aumentado para que sean más grandes (antes 220px)
+                    img.style.maxHeight = '240px'; // Aumentado para que sean más grandes (antes 180px)
+                    img.style.objectFit = 'cover'; // Hace que no se deforme al adaptarse al nuevo tamaño
+                    img.style.borderRadius = '10px';
+                    img.style.marginTop = '8px';
+                    img.style.boxShadow = '0 4px 10px rgba(0,0,0,0.5)';
+                    img.style.alignSelf = 'center'; // La centramos en la burbuja del mensaje
+                    img.alt = palabraClave;
+
+                    const div = document.createElement('div');
+                    div.className = 'message bot-message';
+                    div.style.display = 'flex';
+                    div.style.flexDirection = 'column';
+                    div.appendChild(document.createTextNode('¡Aquí la tienes! Recién sacada de mi Google Images personal.'));
+                    div.appendChild(img);
+
+                    chatMessages.appendChild(div);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    img.onload = () => {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    };
+
+                    guardarEnMemoria(`*(Le mostré una imagen real de Google sobre: ${palabraClave})*`, 'bot');
+                } else {
+                    const fallbackMsg = `Pues mis asesores me dicen que no han encontrado ninguna imagen de eso en Google... Raro.`;
+                    dibujarMensajeEnPantalla(fallbackMsg, 'bot');
+                    guardarEnMemoria(fallbackMsg, 'bot');
+                }
+            } catch (error) {
+                console.error(error);
+                const errorMsg = `Se me ha caído el Wi-Fi del Falcon buscando esa foto (Error de red).`;
+                dibujarMensajeEnPantalla(errorMsg, 'bot');
+            }
+        }
+    </script>
+</body>
+</html>
