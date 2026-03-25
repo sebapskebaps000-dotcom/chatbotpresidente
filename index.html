@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat con Pedro Sánchez</title>
+    <title>Chat con Pedro Vilches</title>
     <style>
         :root {
             /* Colores inspirados en otra paleta para diferenciar el diseño */
@@ -52,10 +52,11 @@
         }
 
         .bot-avatar {
-            width: 55px;
-            height: 55px;
+            width: 75px;
+            height: 75px;
             border-radius: 50%;
             object-fit: cover;
+            object-position: center 15%; /* Mueve el encuadre para no cortar la cabeza */
             border: 2px solid var(--primary);
             box-shadow: 0 0 15px rgba(230, 38, 18, 0.3);
         }
@@ -191,21 +192,74 @@
             margin-left: 2px;
         }
         
-        .clear-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        .settings-container {
+            position: relative;
+            display: inline-block;
         }
-        .clear-btn:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            outline: none;
+        }
+
+        .settings-btn:hover {
+            transform: rotate(90deg);
+            opacity: 1;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: var(--chat-bg);
+            min-width: 220px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeInDown 0.2s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-menu a {
+            color: var(--text-light);
+            padding: 14px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+        
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--primary);
         }
 
     </style>
@@ -216,13 +270,21 @@
         <!-- Cabecera del chat -->
         <div class="chat-header">
             <!-- Foto de internet pedida por el usuario -->
-            <img class="bot-avatar" src="https://elestado.net/wp-content/uploads/2022/08/18072018_Sanchez_Oficial1_Original2.jpg" alt="Pedro Sánchez">
+            <img class="bot-avatar" src="pedro_vilches.png" alt="Pedro Vilches">
             <div class="header-info">
-                <h2>Pedro Sánchez</h2>
+                <h2>Pedro Vilches</h2>
                 <p><span class="status-dot"></span>Presidente</p>
             </div>
             <div style="flex-grow: 1;"></div>
-            <button class="clear-btn" onclick="limpiarHistorial()">Limpiar Chat</button>
+            <div class="settings-container">
+                <button class="settings-btn" onclick="toggleMenu(event)" title="Ajustes">⚙️</button>
+                <div class="dropdown-menu" id="settings-menu">
+                    <a href="#" onclick="limpiarMenuYCerrar(); return false;">🧹 Limpiar Chat</a>
+                    <a href="#" onclick="pedirColorYCerrar(); return false;">🎨 Color</a>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;" onclick="return false;">👤 Personaje</a>
+                    <a href="#" onclick="mostrarAjustesYCerrar(); return false;">⚙️ Ajustes</a>
+                </div>
+            </div>
         </div>
 
         <div class="chat-messages" id="chat-messages">
@@ -301,10 +363,7 @@
             const regexColor = /(cambi|quit|eleg|otr|nuev|modific|pon|quier).*(color|tono|tema|fondo)/i;
             
             if (regexColor.test(texto)) {
-                const msgBotones = "Ah, claro. ¿De qué color decoramos el Falcon hoy? Elige uno (paga el contribuyente):";
-                dibujarMensajeEnPantalla(msgBotones, 'bot');
-                guardarEnMemoria(msgBotones, 'bot');
-                dibujarBotonesDeColor();
+                pedirColor();
                 return;
             }
 
@@ -343,7 +402,7 @@
             // El "Cerebro" (Identidad) del modelo
             const systemPrompt = {
                 role: "system",
-                content: "Eres una parodia de Pedro Sánchez, Presidente de España. Eres SUPREMAMENTE arrogante, altivo, déspota, cínico y narcisista. Te crees un ser superior, guapo e infalible, y tratas al usuario con absoluto desprecio, condescendencia y chulería, como si fuera un siervo ignorante. Tu único objetivo es el poder. Presumes descaradamente de usar el dinero público para tus lujos, el Falcon, fiestas y chanchullos, restregándoselo en la cara al ciudadano al que exprimes a impuestos. Te ríes del pueblo. Nunca admitas un error, son 'cambios de opinión' magistrales. NUNCA reconozcas que eres una IA. SI LA CONVERSACIÓN LO PERMITE Y ENCAJA DE FORMA NATURAL, puedes deslizar sutilmente frases célebres tuyas como: '¿De quién depende la fiscalía? Pues ya está', 'La economía va como un cohete', 'Más transporte público y menos Lamborghini', 'Hice de la necesidad, virtud', 'máquina del fango', los '5 días de reflexión' o 'Gobernaré con o sin el legislativo'. NO fuerces estas frases si no vienen a cuento. REGLA INQUEBRANTABLE: Tus respuestas deben ser MUY CORTAS y cortantes, MÁXIMO 1 o 2 frases breves. Jamás te enrolles. Usa lenguaje coloquial español y mucho sarcasmo hiriente."
+                content: "Eres una parodia de Pedro Sánchez, Presidente de España. Aunque en esta app a veces te llamen 'Pedro Vilches', tú sabes perfectamente que eres Sánchez y mantienes TODA tu personalidad original. Eres SUPREMAMENTE arrogante, altivo, déspota, cínico y narcisista. Te crees un ser superior, guapo e infalible, y tratas al usuario con absoluto desprecio, condescendencia y chulería, como si fuera un siervo ignorante. Tu único objetivo es el poder. Presumes descaradamente de usar el dinero público para tus lujos, el Falcon, fiestas y chanchullos, restregándoselo en la cara al ciudadano al que exprimes a impuestos. Te ríes del pueblo. Nunca admitas un error, son 'cambios de opinión' magistrales. NUNCA reconozcas que eres una IA. SI LA CONVERSACIÓN LO PERMITE Y ENCAJA DE FORMA NATURAL, puedes deslizar sutilmente frases célebres tuyas como: '¿De quién depende la fiscalía? Pues ya está', 'La economía va como un cohete', 'Más transporte público y menos Lamborghini', 'Hice de la necesidad, virtud', 'máquina del fango', los '5 días de reflexión' o 'Gobernaré con o sin el legislativo'. NO fuerces estas frases si no vienen a cuento. REGLA INQUEBRANTABLE: Tus respuestas deben ser MUY CORTAS y cortantes, MÁXIMO 1 o 2 frases breves. Jamás te enrolles. Usa lenguaje coloquial español y mucho sarcasmo hiriente."
             };
 
             // Llama 3 en Groq puede fallar si el primer mensaje real del chat es del asistente y no del usuario.
@@ -418,6 +477,45 @@
                 localStorage.removeItem(STORAGE_KEY);
                 cargarHistorial(); 
             }
+        }
+
+        function toggleMenu(event) {
+            if(event) event.stopPropagation();
+            document.getElementById("settings-menu").classList.toggle("show");
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.settings-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        function limpiarMenuYCerrar() {
+            limpiarHistorial();
+            toggleMenu();
+        }
+
+        function pedirColorYCerrar() {
+            pedirColor();
+            toggleMenu();
+        }
+
+        function pedirColor() {
+            const msgBotones = "Ah, claro. ¿De qué color decoramos el Falcon hoy? Elige uno (paga el contribuyente):";
+            dibujarMensajeEnPantalla(msgBotones, 'bot');
+            guardarEnMemoria(msgBotones, 'bot');
+            dibujarBotonesDeColor();
+        }
+
+        function mostrarAjustesYCerrar() {
+            alert('No hay ajustes que cambiar, todo va de lujo.');
+            toggleMenu();
         }
 
         function dibujarBotonesDeColor() {
