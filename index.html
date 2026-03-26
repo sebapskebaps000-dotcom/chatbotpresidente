@@ -136,12 +136,76 @@
             border-bottom-left-radius: 4px;
         }
 
-        .chat-input-area {
-            padding: 20px;
+        .chat-input-wrapper {
+            display: flex;
+            flex-direction: column;
             background: rgba(0, 0, 0, 0.3);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #image-preview-container {
+            display: none;
+            padding: 15px 20px 0 20px;
+        }
+
+        .image-preview-box {
+            position: relative;
+            display: inline-block;
+            background: #1f2937;
+            padding: 5px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #image-preview-img {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 5px;
+            display: block;
+            object-fit: cover;
+        }
+
+        .remove-image-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .remove-image-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .chat-input-area {
+            padding: 15px 20px 20px 20px;
             display: flex;
             gap: 10px;
+        }
+
+        .attach-btn {
+            background: #374151;
+        }
+        .attach-btn:hover {
+            background: #4b5563;
+            transform: scale(1.05);
+        }
+
+        .user-message img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 5px;
+            display: block;
         }
 
         input[type="text"] {
@@ -405,9 +469,22 @@
             <!-- Los mensajes se insertarán aquí con JavaScript -->
         </div>
 
-        <div class="chat-input-area">
-            <input type="text" id="user-input" placeholder="Dile algo a Pedro..." onkeypress="manejarEnter(event)">
-            <button class="action-btn mic-btn" id="mic-btn" onclick="iniciarDictado()" title="Hablar">
+        <div class="chat-input-wrapper">
+            <div id="image-preview-container">
+                <div class="image-preview-box">
+                    <img id="image-preview-img" src="" alt="Vista previa">
+                    <button class="remove-image-btn" onclick="quitarImagen()" title="Quitar imagen">✕</button>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="procesarImagenSeleccionada(event)">
+                <button class="action-btn attach-btn" onclick="document.getElementById('image-upload').click()" title="Adjuntar foto">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                    </svg>
+                </button>
+                <input type="text" id="user-input" placeholder="Dile algo a Pedro..." onkeypress="manejarEnter(event)">
+                <button class="action-btn mic-btn" id="mic-btn" onclick="iniciarDictado()" title="Hablar">
                 <svg viewBox="0 0 24 24">
                     <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
                 </svg>
@@ -417,15 +494,38 @@
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
             </button>
+            </div>
         </div>
     </div>
 
     <script>
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
+        
+        // Variable para almacenar la imagen que se va a enviar
+        let imagenAdjuntaBase64 = null;
 
         // Cambiamos la clave para que inicie una memoria nueva y limpia
         const STORAGE_KEY = 'historial_chat_pedro';
+
+        function procesarImagenSeleccionada(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagenAdjuntaBase64 = e.target.result;
+                document.getElementById('image-preview-img').src = imagenAdjuntaBase64;
+                document.getElementById('image-preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function quitarImagen() {
+            imagenAdjuntaBase64 = null;
+            document.getElementById('image-upload').value = "";
+            document.getElementById('image-preview-container').style.display = 'none';
+        }
 
         // Insultos más cortos y directos
         const insultos = [
@@ -460,7 +560,7 @@
             if (historialGuardado) {
                 const mensajes = JSON.parse(historialGuardado);
                 mensajes.forEach(msg => {
-                    dibujarMensajeEnPantalla(msg.texto, msg.tipo);
+                    dibujarMensajeEnPantalla(msg.texto, msg.tipo, msg.imagen);
                 });
             } else {
                 // Primer mensaje del bot (solo aquí se presenta completo con el insulto)
@@ -479,11 +579,16 @@
 
         async function enviarMensaje() {
             const texto = userInput.value.trim();
-            if (texto === '') return;
+            if (texto === '' && !imagenAdjuntaBase64) return;
 
-            dibujarMensajeEnPantalla(texto, 'user');
-            guardarEnMemoria(texto, 'user');
+            const imgData = imagenAdjuntaBase64;
+            const textData = texto;
+
+            dibujarMensajeEnPantalla(textData, 'user', imgData);
+            guardarEnMemoria(textData, 'user', imgData);
+            
             userInput.value = ''; 
+            quitarImagen();
 
             // Expresión regular para detectar intenciones de cambiar color
             // Captura combinaciones de verbos/deseos (cambiar, quitar, elegir, otro, quiero) y sujeto (color, tema, fondo)
@@ -511,19 +616,34 @@
             // Construir la memoria (historial) para que el modelo IA recuerde la conversación
             let historialMemoria = [];
             let historialGuardado = localStorage.getItem(STORAGE_KEY);
+            let usaVision = false;
+
             if (historialGuardado) {
                 const mensajes = JSON.parse(historialGuardado);
-                historialMemoria = mensajes.map(msg => ({
-                    role: msg.tipo === 'user' ? 'user' : 'assistant',
-                    content: msg.texto
-                }));
+                historialMemoria = mensajes.map(msg => {
+                    let contentPayload = msg.texto;
+                    
+                    if (msg.imagen) {
+                        usaVision = true;
+                        contentPayload = [];
+                        if (msg.texto) {
+                            contentPayload.push({ type: "text", text: msg.texto });
+                        }
+                        contentPayload.push({ type: "image_url", image_url: { url: msg.imagen } });
+                    }
+
+                    return {
+                        role: msg.tipo === 'user' ? 'user' : 'assistant',
+                        content: contentPayload
+                    };
+                });
             }
 
             // Llamar a la IA
-            await generarRespuestaDelBotConIA(historialMemoria);
+            await generarRespuestaDelBotConIA(historialMemoria, usaVision);
         }
 
-        async function generarRespuestaDelBotConIA(historialCompleto) {
+        async function generarRespuestaDelBotConIA(historialCompleto, usaVision) {
             const API_KEY = "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";
             
             // El "Cerebro" (Identidad) del modelo
@@ -551,6 +671,9 @@
 
             // Array final para la API: System prompt primero, seguido del historial limpio
             const mensajesParaGroq = [systemPrompt, ...historialLimpio];
+            
+            // Si hay imágenes en la memoria, usamos el modelo multimodal más actual
+            const modeloAElegir = usaVision ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.1-8b-instant";
 
             try {
                 const respuesta = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -560,8 +683,7 @@
                         "Authorization": `Bearer ${API_KEY}`
                     },
                     body: JSON.stringify({
-                        // Usamos Llama 3.1, los modelos viejos fueron apagados por Groq
-                        model: "llama-3.1-8b-instant", 
+                        model: modeloAElegir, 
                         messages: mensajesParaGroq,
                         temperature: 0.8
                     })
@@ -585,16 +707,32 @@
             }
         }
 
-        function dibujarMensajeEnPantalla(texto, tipo) {
+        function dibujarMensajeEnPantalla(texto, tipo, imagenBase64 = null) {
             const div = document.createElement('div');
             div.className = `message ${tipo}-message`;
-            div.textContent = texto;
+            
+            if (texto) {
+                const p = document.createElement('div');
+                p.textContent = texto;
+                div.appendChild(p);
+            }
+            
+            if (imagenBase64) {
+                const img = document.createElement('img');
+                img.src = imagenBase64;
+                div.appendChild(img);
+                
+                img.onload = () => chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
             chatMessages.appendChild(div);
             
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (!imagenBase64) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
         }
 
-        function guardarEnMemoria(texto, tipo) {
+        function guardarEnMemoria(texto, tipo, imagen = null) {
             let historial = localStorage.getItem(STORAGE_KEY);
             if (historial) {
                 historial = JSON.parse(historial);
@@ -602,7 +740,7 @@
                 historial = [];
             }
             
-            historial.push({ texto: texto, tipo: tipo });
+            historial.push({ texto: texto, tipo: tipo, imagen: imagen });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(historial));
         }
 
